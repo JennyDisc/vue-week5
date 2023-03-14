@@ -128,6 +128,8 @@ const app = Vue.createApp({
                 product_id,
                 qty,  // 上面qty沒寫預設值的話這邊會顯示undefined
             };
+            // 避免連續點擊"查看更多"與"加到購物車"按鈕造成產品數量錯誤，用此來定義點過按鈕後等待API回應期間不能再次點擊
+            this.loadingItem = product_id + 123;
             // {data}為縮寫(屬性名稱與賦值相同，可以寫一個就行)，完整寫法為{data:data}。{}是照著客戶購物車API資料格式寫的
             axios.post(`${site}api/${api_path}/cart`, { data })
                 .then(response => {
@@ -135,6 +137,8 @@ const app = Vue.createApp({
                     this.$refs.productModal.hide(); // 操作內層元件方法
                     this.getCarts();
                     alert("已加入購物車!");
+                    // 點擊按鈕後API回應完成，恢復loadingItem為初始值
+                    this.loadingItem = '';
                 })
                 .catch((error) => {
                     // console.dir(error);
