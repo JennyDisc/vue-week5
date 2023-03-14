@@ -219,6 +219,8 @@ const app = Vue.createApp({
                     alert("訂單提交成功!");
                     // 提交表單後清空表單欄位(初始化)
                     this.$refs.form.resetForm();
+                    // 重新取得購物車列表
+                    this.getCarts();
                 })
                 .catch((error) => {
                     // console.dir(error);
@@ -233,10 +235,10 @@ const app = Vue.createApp({
     },
     mounted() {
         // 關閉loading效果
-        let loader = this.$loading.show();
+        this.isLoading = true;
         setTimeout(() => {
-            loader.hide()
-        }, 1000);
+            this.isLoading = false
+        }, 1000);  // loading執行1秒後關閉
 
         this.getProducts();
         this.getCarts();
@@ -248,8 +250,7 @@ app.component('VForm', VeeValidate.Form);
 app.component('VField', VeeValidate.Field);
 app.component('ErrorMessage', VeeValidate.ErrorMessage);
 
-// 插件方式註冊
-app.use(VueLoading.LoadingPlugin);
+// 元件方式註冊
 app.component('loading', VueLoading.Component);
 
 app.mount('#app');  // 生成在app這個位置
