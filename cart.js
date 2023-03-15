@@ -27,9 +27,9 @@ VeeValidate.configure({
 
 // 全域元件
 const productModal = {
-    // 接收父層/外層的id、addToCart
+    // 接收父層/外層的id、addToCart、openModal、loadingItem
     // 當id變動時取得遠端資料，並呈現Modal
-    props: ["id", "addToCart", "openModal"],
+    props: ["id", "addToCart", "openModal", "loadingItem"],
     data() {
         return {
             modal: {},
@@ -120,15 +120,17 @@ const app = Vue.createApp({
         openModal(id) {
             this.productId = id;
             // console.log("外層帶入id: ", id);
+            // 為使點擊"查看更多"時產生<i>的loading效果
+            this.loadingItem = id;
         },
         // 增加購物車內產品數量
         addToCart(product_id, qty = 1) { // 當沒有傳入qty參數時就使用預設值1代入
             const data = {
-                // 縮寫。完整寫法為product_id:product_id,
+                // 縮寫。完整寫法為product_id:product_id
                 product_id,
                 qty,  // 上面qty沒寫預設值的話這邊會顯示undefined
             };
-            // 避免連續點擊"查看更多"與"加到購物車"按鈕造成產品數量錯誤，用此來定義點過按鈕後等待API回應期間不能再次點擊
+            // 避免連續點擊"查看更多"與"加到購物車"、與modal裡"加入購物車"造成產品數量錯誤，用此定義點過按鈕後等待API回應期間不能再次點擊
             this.loadingItem = product_id + 123;
             // {data}為縮寫(屬性名稱與賦值相同，可以寫一個就行)，完整寫法為{data:data}。{}是照著客戶購物車API資料格式寫的
             axios.post(`${site}api/${api_path}/cart`, { data })
@@ -137,7 +139,7 @@ const app = Vue.createApp({
                     this.$refs.productModal.hide(); // 操作內層元件方法
                     this.getCarts();
                     alert("已加入購物車!");
-                    // 點擊按鈕後API回應完成，恢復loadingItem為初始值
+                    // 點擊按鈕後API回應完成，初始化loadingItem
                     this.loadingItem = '';
                 })
                 .catch((error) => {
@@ -158,18 +160,19 @@ const app = Vue.createApp({
                 });
         },
         // 更動購物車內單一產品的數量
-        updataCartItem(item) { // 第一個API的id是購物車id，第二個product_id是產品id
+        updataCartItem(item) { // item內第一個API的id是購物車id，第二個product_id是產品id
             const data = {
                 product_id: item.product.id,
                 qty: item.qty,
             };
+            // 儲存所點擊的產品id
             this.loadingItem = item.id;
             axios.put(`${site}api/${api_path}/cart/${item.id}`, { data })
                 .then(response => {
                     // console.log("更新購物車: ", response.data);
                     // 重新取得購物車列表
                     this.getCarts();
-                    // 更新完購物車單一產品數量後，清空this.loadingItem
+                    // 更新完購物車單一產品數量後，初始化this.loadingItem
                     this.loadingItem = "";
                     alert("該產品數量調整成功!");
                 })
@@ -180,13 +183,14 @@ const app = Vue.createApp({
         },
         // 刪除購物車內的單一產品
         deleteItem(item) {
+            // 儲存所點擊的產品id
             this.loadingItem = item.id;
             axios.delete(`${site}api/${api_path}/cart/${item.id}`)
                 .then(response => {
                     // console.log("刪除購物車: ", response.data);
                     // 重新取得購物車列表
                     this.getCarts();
-                    // 刪除完購物車單一產品數量後，清空this.loadingItem
+                    // 刪除完購物車單一產品數量後，初始化this.loadingItem
                     this.loadingItem = "";
                     alert("購物車已移除該品項!");
                 })
@@ -197,12 +201,16 @@ const app = Vue.createApp({
         },
         // 清空購物車
         deleteCarts() {
+            // 避免連續點擊"清空購物車"，用此定義點過按鈕後等待API回應期間不能再次點擊
+            this.loadingItem = 'delete';
             axios.delete(`${site}api/${api_path}/carts`)
                 .then(response => {
                     // console.log("清空購物車: ", response.data);
                     // 重新取得購物車列表
                     this.getCarts();
                     alert("購物車已清空!");
+                    // 清空購物車後，初始化this.loadingItem
+                    this.loadingItem = "";
                 })
                 .catch((error) => {
                     // console.dir(error);
