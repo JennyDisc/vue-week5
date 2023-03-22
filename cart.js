@@ -220,26 +220,53 @@ const app = Vue.createApp({
         // 自訂驗證規則-電話
         isPhone(value) {
             const phoneNumber = /^(09)[0-9]{8}$/
-            return phoneNumber.test(value) ? true : '需填入正確的手機號碼'
+            return phoneNumber.test(value) ? true : '需填入正確的手機號碼格式'
         },
         // 表單送出按鈕
         submitOrder() {
             const order = this.form;
-            axios.post(`${site}api/${api_path}/order`, { data: order })
-                .then(response => {
-                    // console.log("訂單: ", response.data);
-                    alert("訂單提交成功!");
-                    // 提交表單後清空表單欄位(初始化)
-                    this.$refs.form.resetForm();
-                    // 重新取得購物車列表
-                    this.getCarts();
-                })
-                .catch((error) => {
-                    // console.dir(error);
-                    // 結帳API有設定購物車沒品項不能提單
-                    alert("訂單提交失敗，請聯繫客服人員!!");
-                });
+
+            // 寫法1：購物車沒有產品時，阻擋表單送出
+            if (this.cart.carts.length === 0) {
+                alert('購物車請加入商品後執行')
+            } else {
+                axios.post(`${site}api/${api_path}/order`, { data: order })
+                    .then(
+                        response => {
+                            // console.log('訂單: ', response.data)
+                            alert('訂單提交成功!')
+                            // 提交表單後清空表單欄位(初始化)
+                            this.$refs.form.resetForm()
+                            // 提交表單後清空留言欄位
+                            this.form.message = ''
+                            // 重新取得購物車列表
+                            this.getCarts()
+                        })
+                    .catch(() => {
+                        // console.dir(error);
+                        // 結帳API有設定購物車沒品項不能提單
+                        alert('訂單提交失敗，請聯繫客服人員!!')
+                    })
+            }
         },
+
+        // 寫法2：購物車沒有產品也能送出表單
+        //     axios.post(`${site}api/${api_path}/order`, { data: order })
+        //         .then(response => {
+        //             // console.log("訂單: ", response.data);
+        //             alert("訂單提交成功!");
+        //             // 提交表單後清空表單欄位(初始化)
+        //             this.$refs.form.resetForm();
+        //             // 重新取得購物車列表
+        //             this.getCarts();
+        //         })
+        //         .catch((error) => {
+        //             // console.dir(error);
+        //             // 結帳API有設定購物車沒品項不能提單
+        //             alert("訂單提交失敗，請聯繫客服人員!!");
+        //         });
+        // },
+
     },
     // 區域註冊
     components: {
